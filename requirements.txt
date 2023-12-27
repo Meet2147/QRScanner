@@ -1,4 +1,4 @@
 streamlit
-streamlit_qrcode_scanner
+streamlit-qrcode-scanner
 datetime
 hashlib
