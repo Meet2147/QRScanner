@@ -1,0 +1,5 @@
+streamlit
+streamlit_qrcode_scanner
+csv
+datetime
+hashlib
