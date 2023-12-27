@@ -3,7 +3,7 @@ from streamlit_qrcode_scanner import qrcode_scanner
 import csv
 from datetime import datetime
 import hashlib
-
+csv_path = "https://github.com/Meet2147/QRScanner/blob/main/scanned_data.csv"
 scanned_codes = {}
 
 def encrypt_data(data):
@@ -33,14 +33,14 @@ def save_to_csv(data):
     # Read existing CSV data
     rows = []
     try:
-        with open('scanned_data.csv', mode='r') as file:
+        with open(csv_path, mode='r') as file:
             csv_reader = csv.reader(file)
             rows = list(csv_reader)
     except FileNotFoundError:
         pass
 
     # Update the CSV file with the updated out_time
-    with open('scanned_data.csv', mode='w', newline='') as file:
+    with open(csv_path, mode='w', newline='') as file:
         csv_writer = csv.writer(file)
         for row in rows:
             if row and row[0] == encrypted_code:  # Check if the encrypted code matches
