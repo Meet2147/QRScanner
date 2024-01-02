@@ -1,60 +1,41 @@
 import streamlit as st
-from streamlit_qrcode_scanner import qrcode_scanner
-import csv
-from datetime import datetime
-import hashlib
+import requests
+import base64
 
-scanned_codes = {}
+def generate_qr_code(text):
+    base_url = "https://quickchart.io/qr"
+    params = {"text": text}
+    response = requests.get(base_url, params=params)
 
-def encrypt_data(data):
-    hash_object = hashlib.md5(data.encode())
-    encrypted_code = hash_object.hexdigest()
-    return encrypted_code
+    if response.status_code == 200:
+        return response.content
 
-def save_to_csv(data):
-    now = datetime.now()
-    current_time = now.strftime("%Y-%m-%d %H:%M")
-    fields = data.split(",")
+    return None
 
-    name = fields[0] if len(fields) > 0 else ""
-    age = fields[1] if len(fields) > 1 else ""
-    gender = fields[2] if len(fields) > 2 else ""
-    city = fields[3] if len(fields) > 3 else ""
+def main():
+    st.title('User Details QR Code Generator')
 
-    encrypted_code = encrypt_data(data)  # Generate encrypted code from scanned data
+    name = st.text_input('Enter your name:')
+    age = st.number_input('Enter your age:', min_value=0, max_value=150, value=0)
+    phone_number = st.text_input('Enter your phone number:')
+    address = st.text_area('Enter your address:')
+    dob = st.date_input('Enter your date of birth:')
+    financial_planning = st.radio('Have you done financial planning?', ('Yes', 'No'))
 
-    if encrypted_code in scanned_codes:
-        # Update only the out_time for the matching encrypted code
-        scanned_codes[encrypted_code]["out_time"] = current_time
-    else:
-        # For the first scan of the QR code, add it to scanned_codes with in_time
-        scanned_codes[encrypted_code] = {"in_time": current_time, "out_time": ""}
+    user_details = f"Name: {name}\nAge: {age}\nPhone Number: {phone_number}\nAddress: {address}\nDate of Birth: {dob}\nFinancial Planning: {financial_planning}"
 
-    # Read existing CSV data
-    rows = []
-    try:
-        with open("scanned_data.csv", mode='r') as file:
-            csv_reader = csv.reader(file)
-            rows = list(csv_reader)
-    except FileNotFoundError:
-        pass
+    if st.button('Generate QR Code'):
+        qr_image = generate_qr_code(user_details)
 
-    # Update the CSV file with the updated out_time
-    with open("scanned_data.csv", mode='w', newline='') as file:
-        csv_writer = csv.writer(file)
-        for row in rows:
-            if row and row[0] == encrypted_code:  # Check if the encrypted code matches
-                row[6] = current_time  # Update the out_time in the row
-            csv_writer.writerow(row)
-        if not any(row and row[0] == encrypted_code for row in rows):  # If code not found, add a new row
-            row_data = [encrypted_code, name, age, gender, city, current_time, ""]
-            csv_writer.writerow(row_data)
+        if qr_image:
+            st.image(qr_image, caption='Generated QR Code', use_column_width=False)
+            st.markdown(get_binary_file_downloader_html(qr_image, 'QR_Code.png', 'Download QR Code'), unsafe_allow_html=True)
+        else:
+            st.warning("Failed to generate QR code. Please check your input and try again.")
 
-st.title("QR Code Scanner")
+def get_binary_file_downloader_html(bin_file, file_label='File', button_label='Download'):
+    bin_file_b64 = base64.b64encode(bin_file).decode()
+    return f'<a href="data:image/png;base64,{bin_file_b64}" download="{file_label}">{button_label}</a>'
 
-qr_code = qrcode_scanner()
-
-if qr_code:
-    st.write("Scanned Data:", qr_code)
-    save_to_csv(qr_code)
-    st.success("Data saved to CSV!")
+if __name__ == '__main__':
+    main()
