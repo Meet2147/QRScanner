@@ -1,5 +1,4 @@
 streamlit
-streamlit-qrcode-scanner
-csv23
-datetime2
+pybase64
+
 
